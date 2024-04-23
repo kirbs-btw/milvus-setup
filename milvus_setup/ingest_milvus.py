@@ -79,49 +79,35 @@ def ingest_data_to_milvus(collection_milvus,pdf_path):
 
     collection_milvus.create_index("embeddings", index)
 
+def test_index(collection_milvus):
+    print("---loading in collection---")
+    collection_milvus.load()
+    # asking milvus
+
+    question = "What is the Error Number 40300?"
+    question_embedding = model.encode([question])
+
+    print("---Start searching based on vector similarity---")
+
+    search_params = {
+        "metric_type": "L2",
+        "params": {"nprobe": 10},
+    }
+
+    result = collection_milvus.search(question_embedding, "embeddings", search_params, limit=3, output_fields=["content"])
+
+    for hits in result:
+        for hit in hits:
+            print(f"hit: {hit}, random field: {hit.entity.get('content')}")
+            print("------------")
+
+
 def main():
     pdf_path = "TRUMPF_Manual_TruConvert_DC_1030.pdf"
     collection_milvus = setup_collection_structure()
     ingest_data_to_milvus(collection_milvus, pdf_path)
-
+    test_index(collection_milvus)
+    
 if __name__ == '__main__':
     main()
     
-    
-
-"""
-
-# -------------------
-# Query Question...
-
-print(fmt.format("Start loading"))
-hello_milvus.load()
-
-
-
-
-# asking milvus
-
-question = "What is Authorized personnel?"
-question_embedding = model.encode([question])
-
-print(fmt.format("Start searching based on vector similarity"))
-
-search_params = {
-    "metric_type": "L2",
-    "params": {"nprobe": 10},
-}
-
-start_time = time.time()
-result = hello_milvus.search(question_embedding, "embeddings", search_params, limit=3, output_fields=["content"])
-end_time = time.time()
-
-for hits in result:
-    for hit in hits:
-        print(f"hit: {hit}, random field: {hit.entity.get('content')}")
-        print("------------")
-print(end_time - start_time)
-
-# make the question to a vector
-
-"""
